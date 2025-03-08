@@ -1,0 +1,35 @@
+name: Deploy React App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Change this if you use a different branch
+
+permissions:
+  contents: write  # Needed to push to gh-pages branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚡ Set Up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18  # Ensure this matches your project
+
+      - name: 📦 Install Dependencies
+        run: npm install
+
+      - name: 🛠️ Build the React App
+        run: npm run build  # Ensure this is the correct build command
+
+      - name: 🚀 Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages  # Deploy to the gh-pages branch
+          folder: dist  # Change to 'dist' if using Vite
+          clean: true  # Remove old files before deploying
