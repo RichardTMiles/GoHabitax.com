@@ -7,7 +7,7 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import '@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css';
 import './style.css';
 
-const MAPTILER_KEY = 'GnTbl7Ew3Q7YSOj0tyFx'
+const MAPTILER_KEY = 'qaUAS5M1ptv8HP9CoUcv'
 
 interface iSearchResult {
     bbox: number[]
@@ -344,60 +344,80 @@ const MapComponent: React.FC = () => {
 
     return (
         <>
-            {/* 🗺️ Map Container */}
-            <div id="map-container" ref={mapContainer} className="map-container">
-
-                {/* 📌 Left Sidebar (Fullscreen on Mobile) */}
-                <div id="left-sidebar" className={`sidebar ${sidebarState.left ? 'open' : 'collapsed'}`}>
-                    <div className="sidebar-content">
-
-                        {/* 🔍 Search Box Container */}
-                        <div id="search-container" className="search-box">
+            <div ref={mapContainer} style={{width: '100%', height: '100vh'}}>
+                <div id="left" className={`sidebar flex-center left ${sidebarState.left ? '' : 'collapsed'}`}>
+                    <div className="sidebar-content rounded-rect flex-center">
+                        {/* 📌 Address Search Box with Autocomplete */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: '#fff',
+                            padding: '10px',
+                            borderRadius: '5px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}>
                             <input
-                                ref={addressInputRef}
                                 type="text"
                                 value={typeof address === "string" ? address : address.place_name_en}
                                 onChange={handleAddressChange}
                                 placeholder="Enter address"
-                                className="form-control"
+                                style={{
+                                    width: '20vw',
+                                    padding: '5px'
+                            }}
                             />
-
-                            {/* 📌 Suggestions List */}
-                            <div id="suggestions-container">
+                            <div style={{
+                                zIndex: 10,
+                                width: '20vw',
+                                margin: '5px',
+                                maxHeight: '75vh',
+                                overflowY: 'auto',
+                                background: '#fff',
+                                borderRadius: '5px',
+                                position: 'absolute',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                            }}>
                                 {suggestions.map((suggestion, index) => (
-                                    <div key={index} className="suggestion-item" onClick={() => handleSelectSuggestion(suggestion)}>
+                                    <div
+                                        key={index}
+                                        onClick={() => handleSelectSuggestion(suggestion)}
+                                        style={{padding: '5px', cursor: 'pointer', borderBottom: '1px solid #ddd'}}
+                                    >
                                         {suggestion.place_name_en}
                                     </div>
                                 ))}
                             </div>
                         </div>
-
-                        {/* 📌 Debug JSON Display */}
-                        <pre id="debug-info">{typeof address === "string" ? address : JSON.stringify(address, null, 4)}</pre>
-
-                        {/* 🔹 Toggle Sidebar Button */}
-                        <button id="toggle-left" className="sidebar-toggle" onClick={() => toggleSidebar('left')}>
-                            {sidebarState.left ? '← Close' : '→ Open'}
-                        </button>
+                        <pre style={{overflowY: 'scroll', height:"100%", top: "20vh"}} onClick={() => setSuggestions([])}>
+                        {typeof address === "string" ? address : JSON.stringify(address, undefined, 4)}
+                        </pre>
+                        <div
+                            className="sidebar-toggle rounded-rect left"
+                            onClick={() => toggleSidebar('left')}
+                        >
+                            {sidebarState.left ? '←' : '→'}
+                        </div>
                     </div>
-                </div>
 
-                {/* 📌 Right Sidebar (For Additional Features) */}
-                <div id="right-sidebar" className={`sidebar ${sidebarState.right ? 'open' : 'collapsed'}`}>
-                    <div className="sidebar-content">
-                        <p>Right Sidebar</p>
-                        <button id="toggle-right" className="sidebar-toggle" onClick={() => toggleSidebar('right')}>
-                            {sidebarState.right ? '→ Close' : '← Open'}
-                        </button>
+                </div>
+                <div id="right" className={`sidebar flex-center right ${sidebarState.right ? '' : 'collapsed'}`}>
+                    <div className="sidebar-content rounded-rect flex-center">
+                        Right Sidebar
+                        <div
+                            className="sidebar-toggle rounded-rect right"
+                            onClick={() => toggleSidebar('right')}
+                        >
+                            {sidebarState.right ? '→' : '←'}
+                        </div>
                     </div>
                 </div>
             </div>
-
-            {/* 📌 Floating Info Box */}
-            <pre id="info-container" ref={infoRef}></pre>
+            <pre ref={infoRef} id="info">
+            </pre>
         </>
     );
-
 };
 
 export default MapComponent;
