@@ -15,6 +15,14 @@ p {
     font-size: 13px;
 }
 
+
+.flex-center {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 #info {
     display: block;
     position: absolute;
@@ -31,17 +39,22 @@ p {
     background: #fff;
 }
 
+.map-container {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+}
+@media (max-width: 768px) {
+    .map-container {
+        width: 100%;
+        height: calc(100vh - 50px); /* Adjust height when search box is visible */
+    }
+}
+
 .rounded-rect {
     background: white;
     border-radius: 10px;
     box-shadow: 0 0 50px -25px black;
-}
-
-.flex-center {
-    position: absolute;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 .flex-center.left {
@@ -88,6 +101,35 @@ p {
     z-index: 1;
     width: 25vw;
     height: 100%;
+}
+
+@media (max-width: 768px) {
+    .search-box {
+        width: 90% !important;
+        position: absolute;
+        left: 5%;
+    }
+    .suggestions {
+        max-height: 50vh !important; /* Scrollable */
+        overflow-y: auto !important;
+    }
+    .sidebar-content {
+        width: 100vw !important; /* Full width on mobile */
+        height: 100vh !important; /* Full height on mobile */
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 999;
+        background: rgba(255, 255, 255, 0.95); /* Slight transparency */
+        overflow-y: auto;
+        padding: 15px;
+    }
+    .sidebar-toggle {
+        position: absolute;
+        right: 15px;
+        top: 10px;
+    }
+
 }
 
 /*
