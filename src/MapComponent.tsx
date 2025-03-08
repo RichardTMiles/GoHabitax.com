@@ -14,24 +14,20 @@ const MapComponent: React.FC = () => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<maplibregl.Map | null>(null);
     const [suggestions, setSuggestions] = useState<{
-        "geometry": {
-            "coordinates": LngLatLike,
-            "type": string
-        },
-        "type": string,
-        "properties": {
-            "osm_type": string,
-            "osm_id": number,
-            "country": string,
-            "osm_key": string,
-            "housenumber": string,
-            "city": string,
-            "street": string,
-            "countrycode": string,
-            "osm_value": string,
-            "postcode": string,
-            "type": string
-        }
+        bbox: number[]
+        center: [number, number]
+        context: {}[]
+        geometry: { type: string, coordinates: [number, number] }
+        id: string
+        place_name: string
+        place_name_en: string
+        place_type: string[]
+        place_type_name: string[]
+        properties: { ref: string, country_code: string, place_type_name: string[] }
+        relevance: number
+        text: string
+        text_en: string
+        type: string
     }[]>([]);
     const [address, setAddress] = useState<string>('');
     const draw = useRef<MapboxDraw | null>(null);
@@ -45,22 +41,23 @@ const MapComponent: React.FC = () => {
     const addressInputRef = useRef<HTMLInputElement>(null);
 
     // 📌 Fetch autocomplete suggestions from Nominatim API
-    async function fetchSuggestions(query: string) {
-        if (query.length < 3) {
+    // Fetch autocomplete suggestions
+    const fetchSuggestions = async (input: string) => {
+        if (input.length < 3) {
             setSuggestions([]);
             return;
         }
 
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
+        const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(input)}.json?autocomplete=true&key=${MAPTILER_KEY}`;
 
         try {
             const response = await fetch(url);
             const data = await response.json();
-            setSuggestions(data);
+            setSuggestions(data.features || []);
         } catch (error) {
             console.error("Error fetching address suggestions:", error);
         }
-    }
+    };
 
     // 🔹 Reverse Geocode Function
     async function reverseGeocode(lat: number, lon: number) {
@@ -93,7 +90,7 @@ const MapComponent: React.FC = () => {
         setSuggestions([]);
         const newCenter: LngLatLike = [suggestion.geometry.coordinates[0], suggestion.geometry.coordinates[1]];
         setCoordinateCenter(newCenter);
-        map.current?.flyTo({ center: newCenter, zoom: 14 });
+        map.current?.flyTo({center: newCenter, zoom: 14});
     };
 
 
@@ -292,7 +289,7 @@ const MapComponent: React.FC = () => {
                 });
 
                 map.current!.on("click", async (e) => {
-                    const { lng, lat } = e.lngLat;
+                    const {lng, lat} = e.lngLat;
                     console.log("Clicked coordinates:", lat, lng);
                     const address = await reverseGeocode(lat, lng);
                     setAddress(address);
@@ -346,22 +343,40 @@ const MapComponent: React.FC = () => {
                 <div id="left" className={`sidebar flex-center left ${sidebarState.left ? '' : 'collapsed'}`}>
                     <div className="sidebar-content rounded-rect flex-center">
                         {/* 📌 Address Search Box with Autocomplete */}
-                        <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', background: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                        <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: '#fff',
+                            padding: '10px',
+                            borderRadius: '5px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}>
                             <input
                                 type="text"
                                 value={address}
                                 onChange={handleAddressChange}
                                 placeholder="Enter address"
-                                style={{ width: '20vw', padding: '5px' }}
+                                style={{width: '20vw', padding: '5px'}}
                             />
-                            <div style={{ position: 'absolute', background: '#fff', width: '100%', zIndex: 10, maxHeight: '150px', overflowY: 'auto', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                            <div style={{
+                                zIndex: 10,
+                                width: '100%',
+                                maxHeight: '75vh',
+                                overflowY: 'auto',
+                                background: '#fff',
+                                borderRadius: '5px',
+                                position: 'absolute',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                            }}>
                                 {suggestions.map((suggestion, index) => (
                                     <div
                                         key={index}
                                         onClick={() => handleSelectSuggestion(suggestion)}
-                                        style={{ padding: '5px', cursor: 'pointer', borderBottom: '1px solid #ddd' }}
+                                        style={{padding: '5px', cursor: 'pointer', borderBottom: '1px solid #ddd'}}
                                     >
-                                        {suggestion.properties.housenumber} {suggestion.properties.street}, {suggestion.properties.city}, {suggestion.properties.countrycode} {suggestion.properties.postcode}
+                                        {suggestion.place_name_en}
                                     </div>
                                 ))}
                             </div>

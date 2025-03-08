@@ -101,3 +101,7 @@ p {
 .right.collapsed {
     transform: translateX(295px);
 }
+
+body {
+    margin: 0;
+}
