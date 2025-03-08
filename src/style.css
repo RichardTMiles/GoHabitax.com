@@ -62,7 +62,7 @@ p {
 
 .sidebar-toggle {
     position: absolute;
-    width: 1.3em;
+    width: 2.3em;
     height: 1.3em;
     overflow: visible;
     display: flex;
@@ -71,11 +71,11 @@ p {
 }
 
 .sidebar-toggle.left {
-    right: -1.5em;
+    right: -2.5em;
 }
 
 .sidebar-toggle.right {
-    left: -1.5em;
+    left: -2.5em;
 }
 
 .sidebar-toggle:hover {

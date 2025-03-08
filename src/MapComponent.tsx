@@ -32,7 +32,6 @@ const MapComponent: React.FC = () => {
     const [suggestions, setSuggestions] = useState<iSearchResult[]>([]);
     const [address, setAddress] = useState<string|iSearchResult>('');
     const draw = useRef<MapboxDraw | null>(null);
-    const [area, setArea] = useState<number | null>(null);
     const infoRef = useRef<HTMLPreElement>(null);
     const [sidebarState, setSidebarState] = useState({left: true, right: false});
     const [coordinateCenter, setCoordinateCenter] = useState<[
@@ -49,7 +48,8 @@ const MapComponent: React.FC = () => {
             return;
         }
 
-        const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(input)}.json?autocomplete=true&key=${MAPTILER_KEY}`;
+        const { lng, lat } = map.current!.getCenter();
+        const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(input)}.json?autocomplete=true&proximity=${lng},${lat}&key=${MAPTILER_KEY}`;
 
         try {
             const response = await fetch(url);
@@ -390,7 +390,7 @@ const MapComponent: React.FC = () => {
                                 ))}
                             </div>
                         </div>
-                        <pre style={{overflowY: 'hidden', height:"100%"}}>
+                        <pre style={{overflowY: 'scroll', height:"100%", top: "20vh"}} onClick={() => setSuggestions([])}>
                         {typeof address === "string" ? address : JSON.stringify(address, undefined, 4)}
                         </pre>
                         <div
@@ -416,16 +416,6 @@ const MapComponent: React.FC = () => {
             </div>
             <pre ref={infoRef} id="info">
             </pre>
-            <div className="calculation-box">
-                {area !== null ? (
-                    <>
-                        <p><strong>{area}</strong></p>
-                        <p>square meters</p>
-                    </>
-                ) : (
-                    <p>Draw a polygon to calculate area</p>
-                )}
-            </div>
         </>
     );
 };
