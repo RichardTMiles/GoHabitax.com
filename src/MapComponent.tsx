@@ -9,27 +9,28 @@ import './style.css';
 
 const MAPTILER_KEY = 'nHTWvUmDNVV9wDQkOGbe'
 
+interface iSearchResult {
+    bbox: number[]
+    center: [number, number]
+    context: {}[]
+    geometry: { type: string, coordinates: [number, number] }
+    id: string
+    place_name: string
+    place_name_en: string
+    place_type: string[]
+    place_type_name: string[]
+    properties: { ref: string, country_code: string, place_type_name: string[] }
+    relevance: number
+    text: string
+    text_en: string
+    type: string
+}
 
 const MapComponent: React.FC = () => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<maplibregl.Map | null>(null);
-    const [suggestions, setSuggestions] = useState<{
-        bbox: number[]
-        center: [number, number]
-        context: {}[]
-        geometry: { type: string, coordinates: [number, number] }
-        id: string
-        place_name: string
-        place_name_en: string
-        place_type: string[]
-        place_type_name: string[]
-        properties: { ref: string, country_code: string, place_type_name: string[] }
-        relevance: number
-        text: string
-        text_en: string
-        type: string
-    }[]>([]);
-    const [address, setAddress] = useState<string>('');
+    const [suggestions, setSuggestions] = useState<iSearchResult[]>([]);
+    const [address, setAddress] = useState<string|iSearchResult>('');
     const draw = useRef<MapboxDraw | null>(null);
     const [area, setArea] = useState<number | null>(null);
     const infoRef = useRef<HTMLPreElement>(null);
@@ -67,7 +68,8 @@ const MapComponent: React.FC = () => {
             const data = await response.json();
             console.log("reverseGeocode", data)
             if (data.features.length > 0) {
-                return data.features[0].place_name || "No address found";
+                setSuggestions(data.features)
+                setAddress(data.features[0])
             } else {
                 return "No address found";
             }
@@ -85,8 +87,8 @@ const MapComponent: React.FC = () => {
     };
 
     // 📌 When user selects a suggestion
-    const handleSelectSuggestion = (suggestion: any) => {
-        setAddress(suggestion.properties.name);
+    const handleSelectSuggestion = (suggestion: iSearchResult) => {
+        setAddress(suggestion);
         setSuggestions([]);
         const newCenter: LngLatLike = [suggestion.geometry.coordinates[0], suggestion.geometry.coordinates[1]];
         setCoordinateCenter(newCenter);
@@ -164,8 +166,12 @@ const MapComponent: React.FC = () => {
 
                 let labelLayerId;
                 for (let i = 0; i < layers.length; i++) {
-                    if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
-                        labelLayerId = layers[i].id;
+
+                    const layer = layers[i];
+
+                    // Ensure the layer is a symbol and layout exists
+                    if (layer.type === 'symbol' && layer.layout && 'text-field' in layer.layout) {
+                        labelLayerId = layer.id;
                         break;
                     }
                 }
@@ -291,8 +297,7 @@ const MapComponent: React.FC = () => {
                 map.current!.on("click", async (e) => {
                     const {lng, lat} = e.lngLat;
                     console.log("Clicked coordinates:", lat, lng);
-                    const address = await reverseGeocode(lat, lng);
-                    setAddress(address);
+                    await reverseGeocode(lat, lng);
                 });
 
                 const properties: {
@@ -355,14 +360,18 @@ const MapComponent: React.FC = () => {
                         }}>
                             <input
                                 type="text"
-                                value={address}
+                                value={typeof address === "string" ? address : address.place_name_en}
                                 onChange={handleAddressChange}
                                 placeholder="Enter address"
-                                style={{width: '20vw', padding: '5px'}}
+                                style={{
+                                    width: '20vw',
+                                    padding: '5px'
+                            }}
                             />
                             <div style={{
                                 zIndex: 10,
-                                width: '100%',
+                                width: '20vw',
+                                margin: '5px',
                                 maxHeight: '75vh',
                                 overflowY: 'auto',
                                 background: '#fff',
@@ -381,6 +390,9 @@ const MapComponent: React.FC = () => {
                                 ))}
                             </div>
                         </div>
+                        <pre style={{overflowY: 'hidden', height:"100%"}}>
+                        {typeof address === "string" ? address : JSON.stringify(address, undefined, 4)}
+                        </pre>
                         <div
                             className="sidebar-toggle rounded-rect left"
                             onClick={() => toggleSidebar('left')}
@@ -388,6 +400,7 @@ const MapComponent: React.FC = () => {
                             {sidebarState.left ? '←' : '→'}
                         </div>
                     </div>
+
                 </div>
                 <div id="right" className={`sidebar flex-center right ${sidebarState.right ? '' : 'collapsed'}`}>
                     <div className="sidebar-content rounded-rect flex-center">
